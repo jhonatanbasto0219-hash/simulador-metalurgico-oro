@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulador de cianuración de oro</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f2f4f1;--pn:#fff;--ink:#1b2a2e;--mu:#5a6b6f;--ln:#d3dbd7;--ac:#8a6a12;--ok:#2e7d4f;--wn:#a56a00;--bd:#b3261e;--ch:#e9eeea}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#121a1c;--pn:#1a2528;--ink:#e4ebe8;--mu:#98a9a6;--ln:#2c3a3d;--ac:#d9b44a;--ok:#5fb883;--wn:#e0a23a;--bd:#ef7b72;--ch:#223033}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'IBM Plex Sans',system-ui,sans-serif;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+header{padding:18px 20px 8px;max-width:1100px;margin:auto}h1{font-size:22px;margin:0 0 2px;font-weight:600}h3{font-size:16px;margin:22px 0 8px}
+.sub{color:var(--mu);font-size:13px}
+.aviso{max-width:1060px;margin:8px auto;padding:8px 12px;border-left:4px solid var(--ac);background:var(--ch);font-size:13px}
+nav{display:flex;gap:4px;overflow-x:auto;max-width:1100px;margin:auto;padding:0 20px;border-bottom:1px solid var(--ln)}
+nav button{background:none;border:0;border-bottom:3px solid transparent;color:var(--mu);padding:10px 14px;font:inherit;font-weight:500;cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--ink);border-color:var(--ac)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+main{max-width:1100px;margin:auto;padding:16px 20px 40px}section{display:none}section.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.f{background:var(--pn);border:1px solid var(--ln);padding:10px 12px;border-radius:6px}
+.f label{display:block;font-size:13px;font-weight:500;margin-bottom:4px}
+.r{display:flex;align-items:center;gap:6px}.r input{width:100%}.u{color:var(--mu);font-size:12px;min-width:40px}
+input[type=number],select,input[type=text]{background:var(--bg);color:var(--ink);border:1px solid var(--ln);border-radius:4px;padding:5px 7px;font:inherit;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--ac)}
+.tg{font-size:11px;font-weight:500;padding:0 6px;border-radius:3px;margin-left:4px;border:1px solid var(--ln);color:var(--mu)}.tg.doc{border-color:var(--ok);color:var(--ok)}.tg.sup{border-color:var(--wn);color:var(--wn)}
+#flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#flow button{background:var(--pn);border:1px solid var(--ln);color:var(--ink);padding:8px 10px;border-radius:5px;font:inherit;font-size:13px;cursor:pointer}
+#flow button.on{border-color:var(--ac);box-shadow:inset 0 -3px 0 var(--ac)}#flow i{color:var(--mu);font-style:normal}
+.pn{background:var(--pn);border:1px solid var(--ln);border-radius:6px;padding:12px 14px;margin-top:12px}
+.kp{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.kp div{background:var(--pn);border:1px solid var(--ln);border-radius:6px;padding:10px 12px}.kp b{display:block;font-size:22px;font-variant-numeric:tabular-nums;font-weight:600}.kp span{font-size:12px;color:var(--mu)}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--ln);padding:6px 8px;text-align:left}th{background:var(--ch);font-weight:600}
+.sm{list-style:none;padding:0;margin:0;display:grid;gap:6px}.sm li{padding:7px 10px;background:var(--pn);border:1px solid var(--ln);border-left:5px solid var(--ok);border-radius:4px;font-size:13px}
+.sm li.warn{border-left-color:var(--wn)}.sm li.bad{border-left-color:var(--bd)}.sm li b{margin-right:6px}
+.cv{position:relative;height:320px;margin-top:10px}
+.bt{background:var(--ac);color:var(--bg);border:0;padding:8px 14px;border-radius:4px;font:inherit;font-weight:500;cursor:pointer;margin:0 6px 6px 0}
+.bt.s{background:none;color:var(--ink);border:1px solid var(--ln)}
+</style></head><body>
+<header><h1>Simulador de cianuración de oro</h1><div class="sub">Lixiviación por agitación con circuito simplificado hasta doré. Universidad Industrial de Santander, Cinética y fisicoquímica de superficies.</div></header>
+<div class="aviso">Los resultados son una aproximación de diseño y no reemplazan pruebas metalúrgicas ni procedimientos de seguridad.</div>
+<nav id="tabs"></nav>
+<main>
+<section id="t_proceso"><div id="flow"></div><div class="pn" id="det"></div></section>
+<section id="t_entradas"><div class="sub">Etiqueta "Documento": dato o rango del proyecto. Etiqueta "Supuesto": valor de diseño editable que no está en el documento.</div><h3>Alimentación y condiciones de lixiviación</h3><div class="grid" id="g_e"></div><h3>Reactivos, costos y supuestos de balance</h3><div class="grid" id="g_r"></div></section>
+<section id="t_cinetica">
+<div class="f" style="max-width:520px"><label>Modelo cinético</label><select id="modelo"><option value="m1">Primer orden: dX/dt = k(1-X)</option><option value="m2">Primer orden con Xmax: dX/dt = k(Xmax-X)</option><option value="m3">Orden n: dX/dt = k(1-X)^n</option><option value="m4">Núcleo sin reaccionar, difusión: 1-(2/3)X-(1-X)^(2/3) = kd t</option><option value="m5">Núcleo sin reaccionar, reacción química: 1-(1-X)^(1/3) = kr t</option><option value="m6">Empírico mixto: X = Xmax[1-exp(-(kt)^n)]</option><option value="custom">MODELO CINÉTICO PERSONALIZADO</option></select>
+<label style="margin-top:8px">Método de integración (modelos m1 a m3; los demás son analíticos)</label><select id="metodo"><option value="rk4">Runge-Kutta 4</option><option value="euler">Euler</option></select></div>
+<h3>Parámetros cinéticos</h3><div class="grid" id="g_k"></div>
+<div class="pn" id="fac"></div><div class="cv"><canvas id="c1"></canvas></div>
+<p class="sub">Para usar otra ecuación del curso, edite la función modeloPersonalizado() en el código (sección MODELO CINÉTICO PERSONALIZADO) y elija esa opción.</p></section>
+<section id="t_balance"><div class="pn tw" id="bal"></div></section>
+<section id="t_resultados"><div class="kp" id="kp"></div><h3>Semáforos de seguridad y calidad</h3><ul class="sm" id="sm"></ul><div class="cv"><canvas id="c2"></canvas></div></section>
+<section id="t_sens"><div class="sub">Efecto sobre la recuperación global al variar cada parámetro entre -20 % y +20 % respecto al caso actual.</div><div class="cv"><canvas id="c3"></canvas></div><div class="pn tw" id="sens"></div></section>
+<section id="t_export"><button class="bt" onclick="exportarCSV()">Exportar resultados (CSV)</button><button class="bt s" onclick="exportarJSON()">Exportar escenario (JSON)</button>
+<h3>Escenarios</h3><div class="r" style="max-width:420px"><input type="text" id="nom" placeholder="Nombre del escenario"><button class="bt" onclick="guardarEscenario()">Guardar</button></div>
+<div class="pn tw" id="esc"></div><div class="cv"><canvas id="c4"></canvas></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id), fmt=(v,d=1)=>v.toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
+// Campos: [id, etiqueta, unidad, min, max, paso, defecto, origen D=Documento S=Supuesto, grupo]
+const CFG=[
+['tpd','Tonelaje de alimentación','t/d',10,300,1,80,'D','e'],['grade','Ley de cabeza (diluida)','g/t Au',1,40,0.01,10.91,'D','e'],
+['solids','Sólidos en lixiviación (rango 35-45)','% masa',20,60,1,40,'D','e'],['p80','P80','µm',20,300,1,75,'D','e'],
+['ph','pH de lixiviación (rango 10,5-11,0)','',8,13,0.1,10.8,'D','e'],['cn','NaCN (rango 500-1000)','ppm',100,1500,10,750,'D','e'],
+['o2','O2 disuelto (mínimo > 2)','ppm',0,10,0.1,4,'S','e'],['temp','Temperatura (ambiente)','°C',5,60,1,25,'D','e'],
+['tres','Tiempo de residencia (rango 24-48)','h',4,72,1,36,'D','e'],['tsim','Tiempo de simulación','h',12,96,1,48,'S','e'],['dt','Paso dt','h',0.05,2,0.05,0.25,'S','e'],
+['ads','Eficiencia de adsorción (> 96)','%',50,100,0.5,96,'D','e'],['down','Eficiencia desorción + electroobtención + fundición','%',80,100,0.5,99,'S','e'],['target','Recuperación global de referencia','%',50,100,1,85,'D','e'],
+['rhos','Densidad del sólido','t/m3',2,5,0.05,2.8,'S','r'],['rhol','Densidad de la solución','t/m3',0.95,1.2,0.01,1,'S','r'],
+['cnCons','Consumo específico de NaCN','kg/t',0,3,0.05,0.6,'S','r'],['limeCons','Consumo específico de cal','kg/t',0,10,0.1,2,'S','r'],['o2Cons','Demanda de O2 del mineral','kg/t',0,3,0.05,0.5,'S','r'],['recirc','Recirculación de agua','%',0,95,1,70,'S','r'],
+['cNaCN','Costo NaCN','USD/kg',0,10,0.1,3.5,'S','r'],['cLime','Costo cal','USD/kg',0,1,0.01,0.15,'S','r'],['kwh','Consumo de energía','kWh/t',0,100,1,30,'S','r'],['cEn','Costo energía','USD/kWh',0,0.5,0.01,0.1,'S','r'],['cAgua','Costo agua','USD/m3',0,5,0.1,0.5,'S','r'],
+['k','Constante k (kd, kr según modelo)','1/h',0.001,1,0.001,0.15,'S','k'],['n','Exponente n','',0.3,4,0.1,1,'S','k'],['xmax','Xmax','fracción',0.3,1,0.01,0.9,'S','k'],
+['lib','Factor de liberación','fracción',0.3,1,0.01,1,'S','k'],['Ea','Energía de activación','kJ/mol',0,80,1,20,'S','k']];
+const KD={m1:.15,m2:.15,m3:.15,m4:.008,m5:.025,m6:.15,custom:.15};
+const ETAPAS=[
+['Tolva','Mineral grueso de mina','Mineral hacia alimentador','Almacenamiento y flujo continuo'],
+['Alimentador vibratorio','Mineral de tolva','Flujo regulado seco','Evita atascos en la línea de chancado'],
+['Trituración primaria (mandíbulas)','Mineral de mina','Mineral fracturado, 3 a 6 pulgadas','Criba primaria 50-100 mm; circuito cerrado'],
+['Criba primaria','Descarga de mandíbulas','Pasante a secundaria; gruesos retornan','Circuito cerrado con retorno'],
+['Trituración secundaria (cono)','Material intermedio','Mineral fino 3/8" a 1/2"','Circuito cerrado con criba secundaria'],
+['Criba secundaria','Descarga del cono','Mineral a acopio; rechazo recircula','Tamaño de corte 3/8" a 1/2"'],
+['Molienda de bolas','Mineral triturado + agua','Pulpa fina','65-75 % sólidos en molino'],
+['Hidrociclón','Pulpa del molino','Sobreflujo fino; bajo flujo al molino','P80 = 75 µm (80 % pasante malla 200); pulpa 1,3-1,4 g/cm3'],
+['Biooxidación','Pulpa fina + bacterias + aire/O2','Pulpa oxidada con sulfuros expuestos','pH 1,2-1,8; 40-45 °C; O2 > 2 ppm'],
+['Neutralización','Pulpa ácida + lechada de cal','Pulpa alcalina','pH 10,5-11,0; residencia 1,5-3 h'],
+['Lixiviación','Pulpa + NaCN + O2','Pulpa con oro disuelto','NaCN 500-1000 ppm; pH >= 10,5; 24-48 h. 4Au + 8NaCN + O2 + 2H2O -> 4Na[Au(CN)2] + 4NaOH'],
+['Adsorción (CIP/CIL)','Pulpa lixiviada + carbón activado','Carbón cargado + colas','10-25 g/L de carbón; eficiencia > 96 %'],
+['Desorción','Carbón cargado + NaOH/NaCN','Solución rica + carbón estéril','110-140 °C; 2-5 bar; pH > 12'],
+['Electroobtención','Solución rica','Lodo catódico + solución pobre','2,0-3,5 V; 50-100 A/m2; lana de acero o malla'],
+['Secado','Lodo catódico húmedo','Lodo seco','100-150 °C'],
+['Fundición','Lodo seco + fundentes (bórax, sílice)','Lingotes de oro doré + escoria','1100-1250 °C']];
+const TABS=[['proceso','Proceso'],['entradas','Entradas'],['cinetica','Cinética'],['balance','Balance'],['resultados','Resultados'],['sens','Sensibilidad'],['export','Exportar']];
+const CH={};let ULT=null;
+function construir(){
+ CFG.forEach(([id,l,u,mn,mx,st,df,src,g])=>{const d=document.createElement('div');d.className='f';
+  d.innerHTML=`<label>${l} <span class="tg ${src=='D'?'doc':'sup'}">${src=='D'?'Documento':'Supuesto'}</span></label><div class="r"><input type="number" id="n_${id}" min="${mn}" max="${mx}" step="${st}" value="${df}"><span class="u">${u}</span></div><input type="range" id="s_${id}" min="${mn}" max="${mx}" step="${st}" value="${df}" aria-label="${l}">`;
+  $('g_'+g).appendChild(d);const n=$('n_'+id),s=$('s_'+id);
+  n.oninput=()=>{s.value=n.value;actualizarUI()};s.oninput=()=>{n.value=s.value;actualizarUI()};});
+ $('tabs').innerHTML=TABS.map(([i,t],j)=>`<button data-t="${i}" class="${j?'':'on'}">${t}</button>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x==b));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id=='t_'+b.dataset.t));actualizarUI();});
+ $('t_proceso').classList.add('on');
+ $('flow').innerHTML=ETAPAS.map((e,i)=>`<button data-i="${i}">${e[0]}</button>${i<ETAPAS.length-1?'<i>&rarr;</i>':''}`).join('');
+ document.querySelectorAll('#flow button').forEach(b=>b.onclick=()=>detalle(+b.dataset.i));detalle(10);
+ $('modelo').onchange=()=>{setV('k',KD[$('modelo').value]);actualizarUI()};$('metodo').onchange=actualizarUI;
+}
+function detalle(i){const e=ETAPAS[i];document.querySelectorAll('#flow button').forEach(b=>b.classList.toggle('on',+b.dataset.i==i));
+ $('det').innerHTML=`<b>${e[0]}</b><table><tr><th>Entra</th><td>${e[1]}</td></tr><tr><th>Sale</th><td>${e[2]}</td></tr><tr><th>Parámetros</th><td>${e[3]}</td></tr></table>`;}
+function setV(id,v){$('n_'+id).value=v;$('s_'+id).value=v}
+function leer(){const p={};CFG.forEach(c=>p[c[0]]=parseFloat($('n_'+c[0]).value)||0);p.modelo=$('modelo').value;p.metodo=$('metodo').value;return p}
+// Factores empíricos sobre k (supuestos de diseño, ajustar con pruebas cinéticas). Referencia: P80 75 µm, NaCN 750 ppm, O2 4 ppm, 25 °C, 40 % sólidos.
+function factores(p){
+ const fP=Math.sqrt(75/Math.max(p.p80,1)),fpH=p.ph<10?0.7:p.ph<10.5?0.9:p.ph<=11.5?1:Math.max(0.5,1-0.15*(p.ph-11.5)),
+ fCN=(p.cn/(p.cn+200))/(750/950),fO2=(p.o2/(p.o2+1))/(4/5),fT=Math.exp(-p.Ea*1000/8.314*(1/(p.temp+273.15)-1/298.15)),fS=Math.max(0.3,1-0.012*(p.solids-40));
+ return{fP,fpH,fCN,fO2,fT,fS,tot:fP*fpH*fCN*fO2*fT*fS};}
+// ===== MODELO CINÉTICO PERSONALIZADO: reemplace aquí la ecuación del curso. Devuelve X normalizado (0-1) en el tiempo t (h) con k efectivo. =====
+function modeloPersonalizado(p,t,k){return p.xmax*(1-Math.exp(-k*t));}
+function analitico(p,t,k){const g=k*t;
+ switch(p.modelo){
+ case 'm4':{if(g>=1/3)return 1;let a=0,b=1;for(let i=0;i<50;i++){const m=(a+b)/2;(1-2*m/3-Math.pow(1-m,2/3)<g)?a=m:b=m}return a}
+ case 'm5':return g>=1?1:1-Math.pow(1-g,3);
+ case 'm6':return p.xmax*(1-Math.exp(-Math.pow(g,p.n)));
+ case 'custom':return modeloPersonalizado(p,t,k);}return 0}
+function simularCinetica(p){
+ const F=factores(p),k=p.k*F.tot,T=Math.max(p.tsim,p.tres),dt=Math.max(p.dt,0.01),N=Math.ceil(T/dt),t=[],X=[];
+ const ode={m1:x=>k*(1-x),m2:x=>k*(p.xmax-x),m3:x=>k*Math.pow(Math.max(0,1-x),p.n)};let x=0;
+ for(let i=0;i<=N;i++){let v;
+  if(ode[p.modelo]){v=x;const f=ode[p.modelo];
+   if(p.metodo=='rk4'){const a=f(x),b=f(x+dt*a/2),c=f(x+dt*b/2),d=f(x+dt*c);x+=dt*(a+2*b+2*c+d)/6}else x+=dt*f(x)}
+  else v=analitico(p,i*dt,k);
+  t.push(i*dt);X.push(Math.min(1,Math.max(0,v))*p.lib);}
+ return{t,X,F,k}}
+function interp(s,tq){const i=s.t.findIndex(v=>v>=tq);if(i<=0)return s.X[Math.max(i,0)];const f=(tq-s.t[i-1])/(s.t[i]-s.t[i-1]);return s.X[i-1]+f*(s.X[i]-s.X[i-1])}
+function calcularBalance(p,s){
+ const Xl=interp(s,p.tres),a=p.ads/100,d=p.down/100,Xg=Xl*a*d,sol=p.tpd,pulpa=sol/(p.solids/100),agua=pulpa-sol,vol=sol/p.rhos+agua/p.rhol,
+ Au=p.tpd*p.grade/1000,dis=Au*Xl,adsAu=dis*a,rec=adsAu*d,colas=Au-adsAu,
+ cn=p.cnCons*p.tpd,cal=p.limeCons*p.tpd,o2=p.o2Cons*p.tpd+dis/196.97/4*32,fresca=agua*(1-p.recirc/100)/p.rhol,
+ costo=(cn*p.cNaCN+cal*p.cLime+p.kwh*p.tpd*p.cEn+fresca*p.cAgua)/p.tpd;
+ return{Xl,Xg,sol,pulpa,agua,vol,rhoP:pulpa/vol,Au,dis,adsAu,rec,colas,cn,cal,o2,fresca,costo,qh:vol/24}}
+const recG=p=>calcularBalance(p,simularCinetica(p)).Xg*100;
+function semaforos(p,b){const L=[];const a=(n,t,x)=>L.push([n,t,x]);
+ p.ph<10.5?a('bad','ALERTA','pH '+fmt(p.ph)+' por debajo de 10,5: riesgo de generación de HCN.'):p.ph>11?a('warn','AVISO','pH sobre el rango 10,5-11,0 del proyecto.'):a('ok','OK','pH dentro del rango 10,5-11,0.');
+ p.o2<2?a('bad','ALERTA','O2 disuelto '+fmt(p.o2)+' ppm, por debajo de 2 ppm.'):a('ok','OK','O2 disuelto sobre 2 ppm.');
+ (p.cn<500||p.cn>1000)?a('warn','AVISO','NaCN '+fmt(p.cn,0)+' ppm fuera de 500-1000 ppm.'):a('ok','OK','NaCN dentro de 500-1000 ppm.');
+ (p.solids<35||p.solids>45)?a('warn','AVISO','Sólidos '+fmt(p.solids,0)+' % fuera de 35-45 %.'):a('ok','OK','Sólidos dentro de 35-45 %.');
+ (p.tres<24||p.tres>48)?a('warn','AVISO','Residencia fuera de 24-48 h.'):a('ok','OK','Residencia dentro de 24-48 h.');
+ p.ads<96?a('warn','AVISO','Adsorción menor a 96 %.'):a('ok','OK','Adsorción >= 96 %.');
+ const df=b.Xg*100-p.target;a(df<0?'warn':'ok','REF',`Recuperación global ${fmt(b.Xg*100)} % frente a referencia ${fmt(p.target,0)} % (${df>=0?'+':''}${fmt(df)} puntos).`);return L}
+const tAt=(s,lv)=>{const i=s.X.findIndex(v=>v>=lv);return i<0?'no alcanzado':fmt(s.t[i],2)+' h'};
+const tabla=(h,r)=>`<table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${r.map(f=>`<tr>${f.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</table>`;
+function draw(id,cfg){const c=$(id);if(!c||!c.offsetParent)return;if(CH[id])CH[id].destroy();CH[id]=new Chart(c,cfg)}
+function opts(x,y,extra){return Object.assign({responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{title:{display:!!x,text:x}},y:{title:{display:!!y,text:y}}}},extra||{})}
+function actualizarUI(){
+ const p=leer(),s=simularCinetica(p),b=calcularBalance(p,s);ULT={p,s,b};
+ const cs=getComputedStyle(document.documentElement),col=v=>cs.getPropertyValue(v).trim();Chart.defaults.color=col('--mu');Chart.defaults.borderColor=col('--ln');
+ const F=s.F;$('fac').innerHTML=`<b>k efectivo = ${fmt(s.k,4)} 1/h</b> = k x fP ${fmt(F.fP,2)} x fpH ${fmt(F.fpH,2)} x fCN ${fmt(F.fCN,2)} x fO2 ${fmt(F.fO2,2)} x fT ${fmt(F.fT,2)} x fSólidos ${fmt(F.fS,2)}. <span class="sub">Los factores son supuestos empíricos; sustitúyalos por correlaciones propias en factores().</span>`;
+ const kpi=[[fmt(b.Xl*100),'Extracción en lixiviación, %'],[fmt(b.Xg*100),'Recuperación global, %'],[fmt(p.target,0),'Referencia del proyecto, %'],[fmt(b.Au,3),'Oro contenido, kg/d'],[fmt(b.dis,3),'Oro disuelto, kg/d'],[fmt(b.adsAu,3),'Oro adsorbido, kg/d'],[fmt(b.rec,3),'Oro recuperado, kg/d'],[fmt(b.colas,3),'Oro en colas, kg/d'],
+ [fmt(b.Au*330*5,0),'Oro contenido 5 años, kg'],[fmt(b.rec*330*5,0),'Oro recuperado 5 años, kg'],[tAt(s,.5),'Tiempo a 50 % de extracción'],[tAt(s,.85),'Tiempo a 85 %'],[tAt(s,.9),'Tiempo a 90 %'],
+ [fmt(p.cnCons,2)+' / '+fmt(b.cn,1),'NaCN, kg/t / kg/d'],[fmt(p.limeCons,2)+' / '+fmt(b.cal,1),'Cal, kg/t / kg/d'],[fmt(b.o2/p.tpd,2)+' / '+fmt(b.o2,1),'O2, kg/t / kg/d'],
+ [fmt(b.qh,2),'Caudal de pulpa, m3/h'],[fmt(b.agua,1),'Agua en pulpa, t/d'],[fmt(b.sol,1),'Relave sólido, t/d'],[fmt(b.costo,2),'Costo de reactivos y servicios, USD/t']];
+ $('kp').innerHTML=kpi.map(k=>`<div><b>${k[0]}</b><span>${k[1]}</span></div>`).join('');
+ $('sm').innerHTML=semaforos(p,b).map(x=>`<li class="${x[0]}"><b>${x[1]}</b>${x[2]}</li>`).join('');
+ $('bal').innerHTML=tabla(['Etapa','Sólidos entra, t/d','Sólidos sale, t/d','Au entra, kg/d','Au sale, kg/d','Observación'],[
+ ['Trituración y molienda',fmt(b.sol),fmt(b.sol),fmt(b.Au,3),fmt(b.Au,3),'Se agrega agua hasta '+fmt(p.solids,0)+' % sólidos (modelo simplificado)'],
+ ['Biooxidación y neutralización',fmt(b.sol),fmt(b.sol),fmt(b.Au,3),fmt(b.Au,3),'Pulpa '+fmt(b.pulpa)+' t/d; cal '+fmt(b.cal)+' kg/d'],
+ ['Lixiviación',fmt(b.sol),fmt(b.sol),fmt(b.Au,3),fmt(b.dis,3)+' en solución','Agua '+fmt(b.agua)+' t/d; NaCN '+fmt(b.cn)+' kg/d; O2 '+fmt(b.o2)+' kg/d'],
+ ['Adsorción','-',fmt(b.sol)+' (colas)',fmt(b.dis,3),fmt(b.adsAu,3)+' en carbón','Au en colas total '+fmt(b.colas,3)+' kg/d'],
+ ['Desorción y electroobtención','-','-',fmt(b.adsAu,3),fmt(b.rec,3),'Eficiencia conjunta con fundición '+fmt(p.down,1)+' % (supuesto)'],
+ ['Fundición','-','-',fmt(b.rec,3),fmt(b.rec,3),'Oro doré (aleación con plata)'],
+ ['<b>Balance global</b>',fmt(b.sol),fmt(b.sol),fmt(b.Au,3),fmt(b.rec,3)+' recuperado + '+fmt(b.Au-b.rec,3)+' perdido','Recuperación global '+fmt(b.Xg*100)+' %']])+
+ `<p class="sub">Volumen de pulpa ${fmt(b.vol)} m3/d; densidad de pulpa ${fmt(b.rhoP,3)} t/m3; agua fresca ${fmt(b.fresca,1)} m3/d.</p>`;
+ const xs=s.X.map(v=>v*100),gl=s.X.map(v=>v*p.ads/100*p.down/100*100),lb=s.t.map(v=>fmt(v,1));
+ draw('c1',{type:'line',data:{labels:lb,datasets:[{label:'Extracción en lixiviación, %',data:xs,borderColor:col('--ac'),pointRadius:0},{label:'Recuperación global, %',data:gl,borderColor:col('--ok'),pointRadius:0},{label:'Referencia',data:xs.map(()=>p.target),borderColor:col('--mu'),borderDash:[6,4],pointRadius:0}]},options:opts('Tiempo, h','%',{scales:{x:{title:{display:true,text:'Tiempo, h'},ticks:{maxTicksLimit:12}},y:{min:0,max:100,title:{display:true,text:'%'}}}})});
+ draw('c2',{type:'line',data:{labels:lb,datasets:[{label:'Oro disuelto, kg/d de alimentación',data:s.X.map(v=>v*b.Au),borderColor:col('--ac'),pointRadius:0}]},options:opts('Tiempo, h','kg Au/d',{scales:{x:{title:{display:true,text:'Tiempo, h'},ticks:{maxTicksLimit:12}},y:{title:{display:true,text:'kg Au/d'}}}})});
+ const base=b.Xg*100,V=[['k','k'],['P80','p80'],['pH','ph'],['NaCN','cn'],['O2','o2'],['% sólidos','solids'],['Tiempo de residencia','tres']];
+ const S=V.map(([n,key])=>{const lo=recG({...p,[key]:p[key]*0.8}),hi=recG({...p,[key]:p[key]*1.2});return{n,lo,hi,r:Math.abs(hi-lo)}}).sort((x,y)=>y.r-x.r);
+ $('sens').innerHTML=tabla(['Parámetro','-20 %, rec. global %','Caso actual, %','+20 %, rec. global %','Rango, puntos'],S.map(x=>[x.n,fmt(x.lo,2),fmt(base,2),fmt(x.hi,2),fmt(x.r,2)]));
+ draw('c3',{type:'bar',data:{labels:S.map(x=>x.n),datasets:[{label:'-20 %',data:S.map(x=>x.lo-base),backgroundColor:col('--wn')},{label:'+20 %',data:S.map(x=>x.hi-base),backgroundColor:col('--ok')}]},options:opts('Cambio en recuperación global, puntos porcentuales','',{indexAxis:'y',scales:{x:{title:{display:true,text:'Cambio en recuperación global, puntos porcentuales'}}}})});
+ escenarios();}
+function lsGet(){try{return JSON.parse(localStorage.getItem('escCN')||'[]')}catch(e){return[]}}
+function lsSet(a){try{localStorage.setItem('escCN',JSON.stringify(a))}catch(e){alert('No se pudo usar el almacenamiento local del navegador.')}}
+function guardarEscenario(){const a=lsGet(),n=$('nom').value.trim()||'Escenario '+(a.length+1);a.push({n,p:ULT.p,x:ULT.b.Xl*100,g:ULT.b.Xg*100,r:ULT.b.rec,c:ULT.b.colas});lsSet(a);$('nom').value='';escenarios()}
+function cargarEscenario(i){const e=lsGet()[i];if(!e)return;CFG.forEach(c=>setV(c[0],e.p[c[0]]));$('modelo').value=e.p.modelo;$('metodo').value=e.p.metodo;actualizarUI()}
+function borrarEscenario(i){const a=lsGet();a.splice(i,1);lsSet(a);escenarios()}
+function escenarios(){const a=lsGet(),b=ULT.b;
+ $('esc').innerHTML=a.length?tabla(['Nombre','Modelo','Extracción %','Recuperación global %','Au recuperado kg/d','Au colas kg/d',''],a.map((e,i)=>[e.n,e.p.modelo,fmt(e.x),fmt(e.g),fmt(e.r,3),fmt(e.c,3),`<button class="bt s" onclick="cargarEscenario(${i})">Cargar</button><button class="bt s" onclick="borrarEscenario(${i})">Borrar</button>`])):'<span class="sub">Aún no hay escenarios guardados. Ajuste los parámetros y use Guardar.</span>';
+ const cs=getComputedStyle(document.documentElement);
+ draw('c4',{type:'bar',data:{labels:a.map(e=>e.n).concat('Actual'),datasets:[{label:'Recuperación global, %',data:a.map(e=>e.g).concat(b.Xg*100),backgroundColor:cs.getPropertyValue('--ac').trim()}]},options:opts('','%',{scales:{y:{min:0,max:100,title:{display:true,text:'%'}}}})})}
+function descargar(nom,txt,mime){const u=URL.createObjectURL(new Blob([txt],{type:mime})),a=document.createElement('a');a.href=u;a.download=nom;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500)}
+function exportarCSV(){const{p,s,b}=ULT;let c='Parametro;Valor\n';CFG.forEach(f=>c+=f[1]+' ('+f[2]+');'+p[f[0]]+'\n');c+='Modelo;'+p.modelo+'\n\nResultado;Valor\n';
+ [['Extracción lixiviación %',b.Xl*100],['Recuperación global %',b.Xg*100],['Au contenido kg/d',b.Au],['Au disuelto kg/d',b.dis],['Au adsorbido kg/d',b.adsAu],['Au recuperado kg/d',b.rec],['Au colas kg/d',b.colas],['NaCN kg/d',b.cn],['Cal kg/d',b.cal],['O2 kg/d',b.o2],['Pulpa m3/h',b.qh],['Agua t/d',b.agua],['Costo USD/t',b.costo]].forEach(r=>c+=r[0]+';'+r[1]+'\n');
+ c+='\nt_h;X_lixiviacion;Rec_global;Au_disuelto_kg_d\n';s.t.forEach((t,i)=>c+=t+';'+s.X[i]+';'+s.X[i]*p.ads/100*p.down/100+';'+s.X[i]*b.Au+'\n');descargar('resultados_cianuracion.csv',c,'text/csv')}
+function exportarJSON(){descargar('escenario_cianuracion.json',JSON.stringify(ULT.p,null,2),'application/json')}
+construir();actualizarUI();
+</script></body></html>
